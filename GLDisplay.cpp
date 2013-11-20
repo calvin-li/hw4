@@ -42,6 +42,8 @@ GLDisplay::GLDisplay(QWidget *parent)
     mObjectBufferID[2] = 0;
     mObjectBufferID[3] = 0;
 
+    //display tracks mouse movement on mouseover,
+    //without having to click it
     setMouseTracking(true);
 }//constructor
 
