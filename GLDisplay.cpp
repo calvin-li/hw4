@@ -41,7 +41,9 @@ GLDisplay::GLDisplay(QWidget *parent)
     mObjectBufferID[1] = 0;
     mObjectBufferID[2] = 0;
     mObjectBufferID[3] = 0;
-}
+
+    setMouseTracking(true);
+}//constructor
 
 // Initialization: Needs to be done once
 void GLDisplay::initializeGL()
@@ -376,3 +378,19 @@ void GLDisplay::setShading(int option){
 
     updateGL();
 }//setShading
+
+//respond to mouse events
+void GLDisplay::mouseMoveEvent(QMouseEvent *e){
+    GLfloat dx = (e->x() - width()/2);
+    mTheta += -dx*360.0/width();
+    mTheta = (int)mTheta % 360;
+
+    GLfloat dy = (e->y() - height()/2);
+    mPhi += dy*360.0/height();
+    mPhi = (int)mPhi % 360;
+
+    QPoint glob = mapToGlobal(QPoint(width()/2,height()/2));
+    QCursor::setPos(glob);
+
+    updateGL();
+}//mouseMoveEvent

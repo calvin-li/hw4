@@ -30,6 +30,10 @@ class GLDisplay : public QGLWidget
         virtual void resizeGL(int w, int h);
         virtual void paintGL();
 
+        virtual void mouseMoveEvent(QMouseEvent * e);
+        GLfloat lastX, lastY;
+        //previous mouse coordinates (used for movement)
+
     private:
         GLuint mVertexArrayObjectID;
         GLuint mObjectBufferID[5];
