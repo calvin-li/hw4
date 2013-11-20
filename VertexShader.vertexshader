@@ -1,0 +1,19 @@
+#version 150
+
+// Input from model:
+in vec4 vertexPos_modelspace;
+in vec2 vertexUV;
+
+// Modelview matrix
+uniform mat4 MVP;
+
+// Output to fragment shader: Interpolated texture coordinates
+out vec2 fragUV;
+
+void main()
+{
+    // Transform vertex
+    gl_Position = MVP*vec4(vertexPos_modelspace);
+    // Pass through texture coordinates
+    fragUV = vertexUV;
+}

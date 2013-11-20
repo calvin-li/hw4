@@ -1,0 +1,15 @@
+#version 150
+
+// Input:
+// Texture coordinates
+in vec2 fragUV;
+// Texture "sampler" object
+uniform sampler2D myTextureSampler;
+
+// Output: Color
+out vec3 color;
+
+void main()
+{
+    color = texture(myTextureSampler, fragUV).rgb;
+}
