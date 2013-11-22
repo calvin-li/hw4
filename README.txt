@@ -4,3 +4,4 @@ Clicking "refresh" (or pressing return while editing any text box) will update t
 
 This program has the added feature of selecting between smooth and Phong shading via dropdown menu. 
 Also, if the file chosen is "cube.obj" then the cube will be rendered with the "dice_texture2.bmp" texture. Note that this texture has been slightly modified from the default one provided, so it is important to use the correct bitmap.
+Finally, the user can control the camera by clicking and dragging the picture.
