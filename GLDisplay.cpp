@@ -25,6 +25,7 @@ static const GLfloat dice_buffer[] = {
 // Constructor: Set everything to zero and ensure we have an OpenGL 3.2 context (on Mac)
 GLDisplay::GLDisplay(QWidget *parent)
   : QGLWidget(new Core3_2_context(QGLFormat::defaultFormat()), parent),
+    freeMouse(true),
     mVertexArrayObjectID(0), mShaderProgramID(0),
     mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(0.0),
     mNear(0.5f), mFar(5.0f), mFOV(45.0f),
@@ -45,6 +46,8 @@ GLDisplay::GLDisplay(QWidget *parent)
     //display tracks mouse movement on mouseover,
     //without having to click it
     setMouseTracking(true);
+    //Accept focus
+    setFocusPolicy(Qt::StrongFocus);
 }//constructor
 
 // Initialization: Needs to be done once
@@ -383,6 +386,11 @@ void GLDisplay::setShading(int option){
 
 //respond to mouse events
 void GLDisplay::mouseMoveEvent(QMouseEvent *e){
+    //if mouse is free do nothing
+    if(freeMouse){
+        return;
+    }//if
+
     GLfloat dx = (e->x() - width()/2);
     mTheta += -dx*sensitivity/width();
     mTheta = (int)mTheta % 360;
@@ -392,9 +400,32 @@ void GLDisplay::mouseMoveEvent(QMouseEvent *e){
 	if(mPhi > 90) mPhi = 90;
 	else if (mPhi < -90) mPhi = -90;
 
-
-    QPoint glob = mapToGlobal(QPoint(width()/2,height()/2));
-    QCursor::setPos(glob);
+    QPoint global = mapToGlobal(QPoint(width()/2,height()/2));
+    QCursor::setPos(global);
 
     updateGL();
 }//mouseMoveEvent
+
+void GLDisplay::mousePressEvent(QMouseEvent * e){
+    if(e->button()==Qt::LeftButton){
+        freeMouse = !(freeMouse);
+        //show or hide cursor
+        setCursor( QCursor( Qt::CursorShape(
+            Qt::ArrowCursor +
+            Qt::BlankCursor -
+            cursor().shape()
+        )));
+    }//if
+}//mousePressEvent
+
+//release mouse on escape key press
+void GLDisplay::keyReleaseEvent(QKeyEvent *e){
+    if(e->key() == Qt::Key_Escape){
+        freeMouse = true;
+        //show cursor
+        setCursor(QCursor(Qt::ArrowCursor));
+    }//if
+    else
+        QWidget::keyReleaseEvent(e);
+}//keyReleaseEvent
+

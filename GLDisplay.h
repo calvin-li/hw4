@@ -31,7 +31,10 @@ class GLDisplay : public QGLWidget
         virtual void paintGL();
 
         virtual void mouseMoveEvent(QMouseEvent * e);
+        virtual void mousePressEvent(QMouseEvent * e);
+        virtual void keyReleaseEvent(QKeyEvent * e);
         static const GLfloat sensitivity = 180;
+        bool freeMouse;
         //previous mouse coordinates (used for movement)
 
     private:
