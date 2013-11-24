@@ -25,11 +25,12 @@ static const GLfloat dice_buffer[] = {
 // Constructor: Set everything to zero and ensure we have an OpenGL 3.2 context (on Mac)
 GLDisplay::GLDisplay(QWidget *parent)
   : QGLWidget(new Core3_2_context(QGLFormat::defaultFormat()), parent),
+    sensitivity(135), step(1.0/60),
     freeMouse(true),
     mVertexArrayObjectID(0), mShaderProgramID(0),
     mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(0.0),
     mNear(0.5f), mFar(5.0f), mFOV(45.0f),
-    mR(3.0f), mTheta(0.0f), mPhi(0.0f),
+    mR(0.0f), mTheta(0.0f), mPhi(0.0f),
     mRotateX(0.0), mRotateY(0.0), mRotateZ(0.0),
     red(0.5f), green(0.5f), blue(0.5f),
     file("cube.obj"),
@@ -48,6 +49,14 @@ GLDisplay::GLDisplay(QWidget *parent)
     setMouseTracking(true);
     //Accept focus
     setFocusPolicy(Qt::StrongFocus);
+
+    moving[forward] = false;
+    moving[back] = false;
+    moving[left] = false;
+    moving[right] = false;
+
+    //start timer at 60fps
+    startTimer(1000/60);
 }//constructor
 
 // Initialization: Needs to be done once
@@ -256,7 +265,7 @@ void GLDisplay::load(){
         bounds = abs(minZ+moveToOrigin[3][2]);
     if(bounds < maxZ+moveToOrigin[3][2])
         bounds = maxZ+moveToOrigin[3][2];
-    bounds = 1/bounds;
+    bounds = .75/bounds;
     scaleToCube = glm::scale(bounds, bounds, bounds);
 
     // Black background
@@ -384,6 +393,19 @@ void GLDisplay::setShading(int option){
     updateGL();
 }//setShading
 
+void GLDisplay::timerEvent(QTimerEvent *e){
+    if(freeMouse)
+        return;
+    if(moving[forward])
+        move(glm::vec4(0,0,-step,0));
+    if(moving[back])
+        move(glm::vec4(0,0,step,0));
+    if(moving[left])
+        move(glm::vec4(-step,0,0,0));
+    if(moving[right])
+        move(glm::vec4(step,0,0,0));
+}//timerEvent
+
 //respond to mouse events
 void GLDisplay::mouseMoveEvent(QMouseEvent *e){
     //if mouse is free do nothing
@@ -418,14 +440,76 @@ void GLDisplay::mousePressEvent(QMouseEvent * e){
     }//if
 }//mousePressEvent
 
-//release mouse on escape key press
+//respond to keyboard presses
+void GLDisplay::keyPressEvent(QKeyEvent *e){
+    if(e->isAutoRepeat())
+        QWidget::keyPressEvent(e);
+
+    switch(e->key())
+    {
+    case Qt::Key_W:
+    case Qt::Key_Up:
+        moving[forward] = true;
+        break;
+    case Qt::Key_S:
+    case Qt::Key_Down:
+        moving[back] = true;
+        break;
+    case Qt::Key_A:
+    case Qt::Key_Left:
+        moving[left] = true;
+        break;
+    case Qt::Key_D:
+    case Qt::Key_Right:
+        moving[right] = true;
+        break;
+    default:
+        QWidget::keyPressEvent(e);
+        break;
+    }//switch
+
+}//keyPressEvent
+
 void GLDisplay::keyReleaseEvent(QKeyEvent *e){
-    if(e->key() == Qt::Key_Escape){
+    if(e->isAutoRepeat()){
+        QWidget::keyReleaseEvent(e);
+        return;
+    }//if
+
+    switch(e->key())
+    {
+    case Qt::Key_W:
+    case Qt::Key_Up:
+        moving[forward]=false;
+        break;
+    case Qt::Key_S:
+    case Qt::Key_Down:
+        moving[back] = false;
+        break;
+    case Qt::Key_A:
+    case Qt::Key_Left:
+        moving[left] = false;
+        break;
+    case Qt::Key_D:
+    case Qt::Key_Right:
+        moving[right] = false;
+        break;
+    case Qt::Key_Escape:
         freeMouse = true;
         //show cursor
         setCursor(QCursor(Qt::ArrowCursor));
-    }//if
-    else
+        break;
+    default:
         QWidget::keyReleaseEvent(e);
+        break;
+    }//switch
+
 }//keyReleaseEvent
 
+void GLDisplay::move(glm::vec4 direction){
+    direction = glm::rotate(mTheta, glm::vec3(0, 1, 0)) * direction;
+    mTranslateX -= direction.x;
+    mTranslateZ -= direction.z;
+
+    updateGL();
+}//move

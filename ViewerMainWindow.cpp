@@ -144,7 +144,7 @@ ViewerMainWindow::ViewerMainWindow()
     QLabel *rLabel = new QLabel("  r");
     cameraGroupBoxLayout->addWidget(rLabel);
     mR = new QLineEdit;
-    mR->setText("3.0");
+    mR->setText("0.0");
     mR->setFixedWidth(lineWidth);
     cameraGroupBoxLayout->addWidget(mR);
 

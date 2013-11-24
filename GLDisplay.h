@@ -32,8 +32,11 @@ class GLDisplay : public QGLWidget
 
         virtual void mouseMoveEvent(QMouseEvent * e);
         virtual void mousePressEvent(QMouseEvent * e);
+        virtual void keyPressEvent(QKeyEvent * e);
         virtual void keyReleaseEvent(QKeyEvent * e);
-        static const GLfloat sensitivity = 180;
+        virtual void timerEvent(QTimerEvent * e);
+        const GLfloat sensitivity;
+        const double step;
         bool freeMouse;
         //previous mouse coordinates (used for movement)
 
@@ -80,6 +83,15 @@ class GLDisplay : public QGLWidget
 
         float intensity;
         float shine;
+
+        //movement keys
+        bool moving[4];
+        static const unsigned int forward = 0;
+        static const unsigned int back = 1;
+        static const unsigned int left = 2;
+        static const unsigned int right = 3;
+        void move(glm::vec4);
+
 
 };//GLDisplay
 #endif
