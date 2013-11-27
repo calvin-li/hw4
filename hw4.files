@@ -12,3 +12,7 @@ VertexShader.vertexshader
 ViewerMainWindow.cpp
 ViewerMainWindow.h
 ViewerProg.cpp
+smoothVertex.glsl
+smoothFragment.glsl
+phongVertex.glsl
+phongFragment.glsl

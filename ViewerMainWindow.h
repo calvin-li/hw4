@@ -43,8 +43,6 @@ class ViewerMainWindow : public QMainWindow
         QString smooth;
         QString phong;
 
-        QLineEdit *file;
-
     public slots:
         void lightPosChanged();
         void viewChanged();
@@ -52,7 +50,6 @@ class ViewerMainWindow : public QMainWindow
         void rotateChanged();
         void lightChanged();
         void colorChanged();
-        void fileChanged();
         void shadingChanged(QString);
         void refresh();
 };

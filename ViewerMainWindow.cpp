@@ -40,8 +40,6 @@ ViewerMainWindow::ViewerMainWindow()
     lightGroupBox->setMaximumWidth(maxGroupWidth);
     QGroupBox *colorGroupBox = new QGroupBox("Color Options");
     colorGroupBox->setMaximumWidth(maxGroupWidth);
-    QGroupBox *fileGroupBox = new QGroupBox("File");
-    fileGroupBox->setMaximumWidth(maxGroupWidth);
     QGroupBox *shadingGroupBox = new QGroupBox("Shading Options");
     shadingGroupBox->setMaximumWidth(maxGroupWidth);
 
@@ -53,7 +51,6 @@ ViewerMainWindow::ViewerMainWindow()
     controlsLayout->addWidget(rotateGroupBox);
     controlsLayout->addWidget(lightGroupBox);
     controlsLayout->addWidget(colorGroupBox);
-    controlsLayout->addWidget(fileGroupBox);
     controlsLayout->addWidget(shadingGroupBox);
     controlsLayout->addLayout(refreshLayout);
     controlsLayout->addStretch();
@@ -243,22 +240,6 @@ ViewerMainWindow::ViewerMainWindow()
     }//for
     colorGroupBoxLayout->addStretch();
 
-    //file controls
-    QHBoxLayout *fileGroupBoxLayout = new QHBoxLayout;
-    fileGroupBox->setLayout(fileGroupBoxLayout);
-
-    QPushButton *load = new QPushButton("Load File");
-
-    QLabel *fileLabel = new QLabel(" File Name");
-    fileGroupBoxLayout->addWidget(fileLabel);
-    file = new QLineEdit;
-    file->setText("cube.obj");
-    fileGroupBoxLayout->addWidget(file);
-
-    fileGroupBoxLayout->addWidget(load);
-    QObject::connect(load, SIGNAL(clicked()), this, SLOT(fileChanged()));
-    fileGroupBoxLayout->addStretch();
-
     //shading options
     QHBoxLayout *shadingGroupBoxLayout = new QHBoxLayout;
     shadingGroupBox->setLayout(shadingGroupBoxLayout);
@@ -288,8 +269,6 @@ ViewerMainWindow::ViewerMainWindow()
     QObject::connect(mFar, SIGNAL(returnPressed()), this, SLOT(refresh()));
 
     QObject::connect(mR, SIGNAL(returnPressed()), this, SLOT(refresh()));
-
-    QObject::connect(file, SIGNAL(returnPressed()), this, SLOT(refresh()));
 
 }//ViewerMainWindow Constructor
 
@@ -333,10 +312,6 @@ void ViewerMainWindow::colorChanged(){
         (double)colorDials[2]->value()/colorMax);
 }//colorChanged
 
-void ViewerMainWindow::fileChanged(){
-    mGLDisplay->setFile(file->text());
-}//loadFile
-
 void ViewerMainWindow::shadingChanged(QString curText){
     if(curText.compare(smooth) == 0)
         mGLDisplay->setShading(GLDisplay::smoothOptionNumber);
@@ -351,5 +326,4 @@ void ViewerMainWindow::refresh(){
     rotateChanged();
     lightChanged();
     colorChanged();
-    fileChanged();
 }//refresh

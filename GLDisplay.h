@@ -18,9 +18,7 @@ class GLDisplay : public QGLWidget
         void setRotate(double rx, double ry, double rz);
         void setLight(double aI, double dR);
         void setColor(double red, double green, double blue);
-        void setFile(QString s);
         void setShading(int option);
-        void load();
 
         static const int smoothOptionNumber = 0;
         static const int phongOptionNumber = 1;
@@ -69,8 +67,6 @@ class GLDisplay : public QGLWidget
         float green;
         float blue;
 
-        QString file;
-
         int vertex_buffer_size;
         int index_buffer_size;
 
@@ -92,6 +88,10 @@ class GLDisplay : public QGLWidget
         static const unsigned int right = 3;
         void move(glm::vec4);
 
+        glm::mat4 projection;
+        glm::mat4 view;
+        void load(int num);
+        void draw(int num);
 
 };//GLDisplay
 #endif

@@ -22,6 +22,19 @@ static const GLfloat dice_buffer[] = {
     0.0f,0.0f, .25f,0.0f, .25f,0.5f, 0.0f,0.5f,
 };
 
+//list of obj files we are using
+const QString files[] = {
+    "cube.obj",
+};//files
+const int numFiles = sizeof(files)/sizeof(QString);
+
+const GLfloat translate_buffer[] = {
+    0.0f, 0.0f, 0.0f,
+};//translate_buffer
+const GLfloat rotate_buffer[] = {
+    0.0f, 0.0f, 0.0f,
+};//rotate_buffer
+
 // Constructor: Set everything to zero and ensure we have an OpenGL 3.2 context (on Mac)
 GLDisplay::GLDisplay(QWidget *parent)
   : QGLWidget(new Core3_2_context(QGLFormat::defaultFormat()), parent),
@@ -33,7 +46,6 @@ GLDisplay::GLDisplay(QWidget *parent)
     mR(0.0f), mTheta(0.0f), mPhi(0.0f),
     mRotateX(0.0), mRotateY(0.0), mRotateZ(0.0),
     red(0.5f), green(0.5f), blue(0.5f),
-    file("cube.obj"),
     moveToOrigin(glm::mat4(1.0f)), scaleToCube(glm::mat4(1.0f)),
     lightX(0.0f), lightY(0.0f), lightZ(2.0),
     intensity(.2*ViewerMainWindow::intensityMax),
@@ -79,8 +91,7 @@ void GLDisplay::initializeGL()
     glSetup();
 
     setMinimumSize(0, 0);
-
-    load();
+    load(0);
 
     // Load and compile our shaders
     smoothShaderID = LoadShaders("smoothVertex.glsl", "smoothFragment.glsl");
@@ -92,13 +103,17 @@ void GLDisplay::initializeGL()
 // Draw window contents
 void GLDisplay::paintGL()
 {
+    // Clear screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     //Generate MVP matrix
+    //projection
     float fov = mFOV;
     float aspect = (double)width() / height();
     float near = mNear+.1, far = mFar;
-    glm::mat4 projection = glm::perspective(fov, aspect, near, far);
+    projection = glm::perspective(fov, aspect, near, far);
 
-
+    //view
     if(mR < 0){
         mTheta += 180;
         mPhi *= -1;
@@ -108,87 +123,20 @@ void GLDisplay::paintGL()
     glm::mat4 rotateTheta = glm::rotate(-mTheta, glm::vec3(0,1,0));
     glm::mat4 rotatePhi = glm::rotate(mPhi, glm::vec3(1,0,0));
     glm::mat4 translateR = glm::mat4(1.0f);
-    translateR[3][2] = -mR - (file.compare("cube.obj")==0);
+    translateR[3][2] = -mR;
 
-    glm::mat4 view = translateR * rotatePhi * rotateTheta;
+    view = translateR * rotatePhi * rotateTheta;
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model[3][0] += mTranslateX;
-    model[3][1] += mTranslateY;
-    model[3][2] += mTranslateZ;
+    for(int i=0; i<numFiles; i++){
+        draw(i);
+    }//for
 
-    //generate rotation matrices
-    glm::mat4 rotateX = glm::rotate(mRotateX, glm::vec3(1, 0, 0));
-    glm::mat4 rotateY = glm::rotate(mRotateY, glm::vec3(0, 1, 0));
-    glm::mat4 rotateZ = glm::rotate(mRotateZ, glm::vec3(0, 0, 1));
-
-    model = model * rotateZ * rotateY * rotateX;
-
-    glm::mat4 normalMatrix = glm::transpose(glm::inverse(view*model));
-    glm::mat4 lightMatrix = glm::transpose(glm::inverse(view));
-    glm::vec4 light = lightMatrix * glm::vec4(lightX, lightY, lightZ, 1);
-
-    glm::mat4 MVP = projection * view * model * scaleToCube * moveToOrigin;
-
-    // Clear screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Enable vertex and fragment processing
-    glUseProgram(mShaderProgramID);
-
-    // Pass model view matrix to shader
-    glUniformMatrix4fv(glGetUniformLocation(mShaderProgramID, "MVP"), 1, false, &MVP[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(mShaderProgramID, "normalMatrix"),
-                                                1, false, &normalMatrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(mShaderProgramID, "lightMatrix"),
-                                                1, false, &lightMatrix[0][0]);
-    // Pass lighting properties to shaders
-    glUniform4f(glGetUniformLocation(mShaderProgramID, "light"), light.x, light.y, light.z, light.w);
-    glUniform1f(glGetUniformLocation(mShaderProgramID, "intensity"), intensity);
-    glUniform1f(glGetUniformLocation(mShaderProgramID, "shine"), shine*shine);
-    glUniform1i(glGetUniformLocation(mShaderProgramID, "is_dice"), file.compare("cube.obj")==0);
-
-
-    // Associate positions and colors with corresponding attributes in shader
-    GLuint positionAttribute = glGetAttribLocation(mShaderProgramID, "vertexPos_modelspace");
-    glEnableVertexAttribArray(positionAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[0]);
-    glVertexAttribPointer(positionAttribute, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    GLuint colorAttribute = glGetAttribLocation(mShaderProgramID, "vertexColor");
-    glEnableVertexAttribArray(colorAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[1]);
-    glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    GLuint normalAttribute = glGetAttribLocation(mShaderProgramID, "vertexNormal");
-    glEnableVertexAttribArray(normalAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[2]);
-    glVertexAttribPointer(normalAttribute, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
-
-    GLuint UVAttribute = glGetAttribLocation(mShaderProgramID, "vertexUV");
-    glEnableVertexAttribArray(UVAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[3]);
-    glVertexAttribPointer(UVAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mTextureID);
-    glUniform1i(glGetAttribLocation(mShaderProgramID, "myTextureSampler"), 0);
-
-    // Bind index buffer and draw as triangles
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mObjectBufferID[4]);
-    glDrawElements(GL_TRIANGLES, index_buffer_size, GL_UNSIGNED_INT, (void*)0);
-
-    // It is good practive to disable these once we are done
-    glDisableVertexAttribArray(positionAttribute);
-    glDisableVertexAttribArray(colorAttribute);
-    glDisableVertexAttribArray(normalAttribute);
-    glDisableVertexAttribArray(UVAttribute);
 }//paintGL
 
-void GLDisplay::load(){
+void GLDisplay::load(int num){
 
     Mesh *shape = new Mesh();
-    load_obj(file.toStdString().c_str(), shape);
+    load_obj(files[num].toStdString().c_str(), shape);
 
     index_buffer_size = shape->elements.size();
     vertex_buffer_size = shape->vertices.size();
@@ -305,6 +253,78 @@ void GLDisplay::load(){
 
 }//load
 
+void GLDisplay::draw(int num){
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model[3][0] += translate_buffer[num*3] + mTranslateX;
+    model[3][1] += translate_buffer[num*3 + 1] + mTranslateY;
+    model[3][2] += translate_buffer[num*3 + 2] + mTranslateZ;
+
+    //generate rotation matrices
+    glm::mat4 rotateX = glm::rotate(rotate_buffer[num*3], glm::vec3(1, 0, 0));
+    glm::mat4 rotateY = glm::rotate(rotate_buffer[num*3 + 1], glm::vec3(0, 1, 0));
+    glm::mat4 rotateZ = glm::rotate(rotate_buffer[num*3 + 2], glm::vec3(0, 0, 1));
+
+    model = model * rotateZ * rotateY * rotateX;
+
+    glm::mat4 normalMatrix = glm::transpose(glm::inverse(view*model));
+    glm::mat4 lightMatrix = glm::transpose(glm::inverse(view));
+    glm::vec4 light = lightMatrix * glm::vec4(lightX, lightY, lightZ, 1);
+
+    glm::mat4 MVP = projection * view * model * scaleToCube * moveToOrigin;
+
+    // Enable vertex and fragment processing
+    glUseProgram(smoothShaderID);
+
+    // Pass model view matrix to shader
+    glUniformMatrix4fv(glGetUniformLocation(mShaderProgramID, "MVP"), 1, false, &MVP[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(mShaderProgramID, "normalMatrix"),
+                                                1, false, &normalMatrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(mShaderProgramID, "lightMatrix"),
+                                                1, false, &lightMatrix[0][0]);
+    // Pass lighting properties to shaders
+    glUniform4f(glGetUniformLocation(mShaderProgramID, "light"), light.x, light.y, light.z, light.w);
+    glUniform1f(glGetUniformLocation(mShaderProgramID, "intensity"), intensity);
+    glUniform1f(glGetUniformLocation(mShaderProgramID, "shine"), shine*shine);
+    glUniform1i(glGetUniformLocation(mShaderProgramID, "is_dice"), files[num].compare("cube.obj")==0);
+
+
+    // Associate positions and colors with corresponding attributes in shader
+    GLuint positionAttribute = glGetAttribLocation(mShaderProgramID, "vertexPos_modelspace");
+    glEnableVertexAttribArray(positionAttribute);
+    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[0]);
+    glVertexAttribPointer(positionAttribute, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    GLuint colorAttribute = glGetAttribLocation(mShaderProgramID, "vertexColor");
+    glEnableVertexAttribArray(colorAttribute);
+    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[1]);
+    glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    GLuint normalAttribute = glGetAttribLocation(mShaderProgramID, "vertexNormal");
+    glEnableVertexAttribArray(normalAttribute);
+    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[2]);
+    glVertexAttribPointer(normalAttribute, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
+
+    GLuint UVAttribute = glGetAttribLocation(mShaderProgramID, "vertexUV");
+    glEnableVertexAttribArray(UVAttribute);
+    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[3]);
+    glVertexAttribPointer(UVAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTextureID);
+    glUniform1i(glGetAttribLocation(mShaderProgramID, "myTextureSampler"), 0);
+
+    // Bind index buffer and draw as triangles
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mObjectBufferID[4]);
+    glDrawElements(GL_TRIANGLES, index_buffer_size, GL_UNSIGNED_INT, (void*)0);
+
+    // It is good practive to disable these once we are done
+    glDisableVertexAttribArray(positionAttribute);
+    glDisableVertexAttribArray(colorAttribute);
+    glDisableVertexAttribArray(normalAttribute);
+    glDisableVertexAttribArray(UVAttribute);
+}//draw
+
 // What to do when the window is resized
 void GLDisplay::resizeGL(int w, int h)
 {
@@ -373,13 +393,6 @@ void GLDisplay::setColor(double red, double green, double blue){
     updateGL();
 }//setColor
 
-void GLDisplay::setFile(QString s){
-
-    file = s;
-    load();
-    updateGL();
-}//setFile
-
 void GLDisplay::setShading(int option){
     switch(option){
         case smoothOptionNumber:
@@ -394,6 +407,7 @@ void GLDisplay::setShading(int option){
 }//setShading
 
 void GLDisplay::timerEvent(QTimerEvent *e){
+    if(e == 0){}
     if(freeMouse)
         return;
     if(moving[forward])
