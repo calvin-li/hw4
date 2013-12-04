@@ -22,9 +22,10 @@ static const GLfloat dice_buffer[] = {
     0.0f,0.0f, .25f,0.0f, .25f,0.5f, 0.0f,0.5f,
 };
 
-//list of obj files we are using
+//list of form1i(glGetUniformLocation(mShaderProgramID, "is_dice"), files[num].compare("cube.obj")==0);
+//obj files we are using
 const QString files[] = {
-    "cube.obj",
+    "masterchief.obj", "sword.obj"
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
@@ -140,18 +141,22 @@ void GLDisplay::load(int num){
 
     index_buffer_size = shape->elements.size();
     vertex_buffer_size = shape->vertices.size();
-    int num_normal = shape->normals.size();
+    uv_buffer_size = shape->uvs.size();
+		GLuint num_normal = shape->normals.size();
+
     GLfloat minX = 0.0f, maxX = 0.0f;
     GLfloat minY = 0.0f, maxY = 0.0f;
     GLfloat minZ = 0.0f, maxZ = 0.0f;
     GLfloat x, y, z;
 
     GLfloat vertex_buffer[vertex_buffer_size*4];
-    GLfloat color_buffer[vertex_buffer_size*3];
+    GLfloat color_buffer [vertex_buffer_size*3];
     GLfloat normal_buffer[num_normal*4];
-    GLuint index_buffer[index_buffer_size];
+    GLfloat uv_buffer		 [uv_buffer_size*2];
+		GLuint index_buffer	 [index_buffer_size];
 
-    for(int i=0; i < vertex_buffer_size; i++){
+		// vertex buffer
+    for(size_t i=0; i < vertex_buffer_size; i++){
         x = shape->vertices[i].x;
         vertex_buffer[i*4] = x;
             maxX = max(maxX, x);
@@ -170,27 +175,36 @@ void GLDisplay::load(int num){
         vertex_buffer[i*4+3] = 1;
     }//for
 
-    for(int i=0; i < vertex_buffer_size; i++){
+		// color buffer
+    for(size_t i=0; i < vertex_buffer_size; i++){
         color_buffer[i*3] = red;
         color_buffer[i*3+1] = green;
         color_buffer[i*3+2] = blue;
     }//for
 
-    for(int i=0; i < num_normal; i++){
+		// normal buffer
+    for(size_t i=0; i < num_normal; i++){
         normal_buffer[i*4] = shape->normals[i].x;
         normal_buffer[i*4+1] = shape->normals[i].y;
         normal_buffer[i*4+2] = shape->normals[i].z;
         normal_buffer[i*4+3] = 0;
     }//for
 
-    for(int i=0; i < index_buffer_size; i++){
+		// uv buffer
+		for(size_t i = 0, j = 0; i < uv_buffer_size; i++, j+=2){
+			uv_buffer[j	 ] = shape->uvs[i].x;
+			uv_buffer[j+1] = shape->uvs[i].y;
+		}//for
+
+		// index buffer
+    for(size_t i=0; i < index_buffer_size; i++){
         index_buffer[i] = shape->elements[i];
     }//for
 
     GLuint sizeofvertex = sizeof(vertex_buffer);
     GLuint sizeofcolor = sizeof(color_buffer);
     GLuint sizeofnormal = sizeof(normal_buffer);
-    GLuint sizeofUV = sizeof(dice_buffer);
+    GLuint sizeofUV = sizeof(uv_buffer);
     GLuint sizeofindex = sizeof(index_buffer);
 
     //set scale and translate matrices
@@ -233,19 +247,19 @@ void GLDisplay::load(int num){
 
     // Load UV data into buffer
     glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeofUV, dice_buffer, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeofUV, uv_buffer, GL_STATIC_DRAW);
 
     // Load index data into buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mObjectBufferID[4]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeofindex, index_buffer, GL_STATIC_DRAW);
 
     Image diceImage;
-    ImageLoad("dice_texture2.bmp", &diceImage);
+    ImageLoad("masterchief.bmp", &diceImage);
 
     glGenTextures(1, &mTextureID);
     glBindTexture(GL_TEXTURE_2D, mTextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, diceImage.sizeX, diceImage.sizeY,
-                 0, GL_RGB, GL_UNSIGNED_BYTE, diceImage.data);
+                 0, GL_BGR, GL_UNSIGNED_BYTE, diceImage.data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -379,7 +393,7 @@ void GLDisplay::setColor(double red, double green, double blue){
     this->blue = blue;
 
     GLfloat color_buffer[vertex_buffer_size*3];
-    for(int i=0; i<vertex_buffer_size; i++){
+    for(size_t i=0; i<vertex_buffer_size; i++){
         color_buffer[i*3] = red;
         color_buffer[i*3+1] = green;
         color_buffer[i*3+2] = blue;

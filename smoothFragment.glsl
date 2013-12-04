@@ -10,9 +10,6 @@ out vec3 color;
 
 void main()
 {
-   if(is_dice == 1)
-      color = vColor * texture(myTextureSampler, fragUV).rgb;
-   else
-      color = vColor;
+  color = vColor * texture(myTextureSampler, fragUV).rgb;
 
 }//main

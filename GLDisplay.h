@@ -67,8 +67,9 @@ class GLDisplay : public QGLWidget
         float green;
         float blue;
 
-        int vertex_buffer_size;
-        int index_buffer_size;
+        GLuint vertex_buffer_size,
+        			 index_buffer_size,
+							 uv_buffer_size;
 
         glm::mat4 moveToOrigin;
         glm::mat4 scaleToCube;

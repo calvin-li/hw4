@@ -35,6 +35,5 @@ void main()
    fragmentPosition = transformedVertexPos;
    vColor = vertexColor;
 
-   if(is_dice == 1)
-      fragUV = vertexUV;
+   fragUV = vertexUV;
 }//main

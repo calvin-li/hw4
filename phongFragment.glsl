@@ -21,27 +21,26 @@ void main()
    const float kd = 1;
    const float ks = 5;
 
+	 vec3 vColor = texture(myTextureSampler, fragUV).rgb;
+
    //transformed normal
    //light direction
    vec4 lightVector = (light - fragmentPosition);
    vec4 l = normalize(lightVector);
    vec4 r = normalize(reflect(l, n));
    float d = length(lightVector);
+	 float attenuation = 1 / (d*d);
 
-   float i = (
-         (1/(d*d) *
-            (kd*intensity *
-             max(dot(l, n), 0)) +
-            (ks*intensity *
-             max(pow(dot(r,v), shine), 0)
-            )
-         ) +
-         ka*intensity
-   );
+	 float cosAlpha = max(dot(l, n), 0);
+	 float cosTheta = max(dot(r, v), 0);
 
-   if(is_dice == 1)
-      color = i * texture(myTextureSampler, fragUV).rgb;
-   else
-      color = i * vColor;
+	 vec3 ambient =  ka * vColor;
+	 vec3 diffuse =  kd * vColor * cosAlpha;
+	 vec3 specular = ks * light.xyz * pow(cosTheta, shine);
+
+   //vec3 i = ambient;
+	 vec3 i = clamp(intensity * (ambient + attenuation*(diffuse + specular)), 0, 1);
+
+   color = i;
 
 }//main

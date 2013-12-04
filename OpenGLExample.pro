@@ -21,10 +21,14 @@ SOURCES += \
     GLDisplay.cpp \
     glheader.cpp \
     ViewerMainWindow.cpp \
-    ViewerProg.cpp
+    ViewerProg.cpp \
+		readObj.cpp \
+		readBMP.cpp 
 
 HEADERS  += \
     Core3_2_context.h \
     GLDisplay.h \
     glheader.h \
     ViewerMainWindow.h
+		readObj.h \
+		readBMP.h

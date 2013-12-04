@@ -5,6 +5,8 @@
  *  Free to good home!
  *
  */
+#ifndef READBMP_H
+#define READBMP_H
 
 #include <stdio.h>      // Header file for standard file i/o.
 #include <stdlib.h>     // Header file for malloc/free.
@@ -136,4 +138,4 @@ int ImageLoad(const char *filename, Image *image) {
     return 1;
 }
 
-
+#endif

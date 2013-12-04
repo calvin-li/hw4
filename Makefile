@@ -47,13 +47,15 @@ SOURCES       = GLDisplay.cpp \
 		glheader.cpp \
 		ViewerMainWindow.cpp \
 		ViewerProg.cpp moc_GLDisplay.cpp \
-		moc_ViewerMainWindow.cpp
+		moc_ViewerMainWindow.cpp 
+
 OBJECTS       = GLDisplay.o \
 		glheader.o \
 		ViewerMainWindow.o \
 		ViewerProg.o \
 		moc_GLDisplay.o \
-		moc_ViewerMainWindow.o
+		moc_ViewerMainWindow.o 
+
 DIST          = /usr/lib/qt4/mkspecs/common/unix.conf \
 		/usr/lib/qt4/mkspecs/common/linux.conf \
 		/usr/lib/qt4/mkspecs/common/gcc-base.conf \
@@ -82,9 +84,9 @@ DIST          = /usr/lib/qt4/mkspecs/common/unix.conf \
 		/usr/lib/qt4/mkspecs/features/lex.prf \
 		/usr/lib/qt4/mkspecs/features/include_source_dir.prf \
 		OpenGLExample.pro
-QMAKE_TARGET  = OpenGLExample
+QMAKE_TARGET  = hw4 
 DESTDIR       = 
-TARGET        = OpenGLExample
+TARGET        = hw4
 
 first: all
 ####### Implicit rules
@@ -232,10 +234,12 @@ GLDisplay.o: GLDisplay.cpp GLDisplay.h \
 		Core3_2_context.h \
 		glheader.h \
 		ViewerMainWindow.h \
-		readObj.cpp \
 		readObj.h \
-		readBMP.cpp \
-		readBMP.h
+		readObj.cpp \
+		readBMP.h \
+		readBMP.cpp
+
+
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLDisplay.o GLDisplay.cpp
 
 glheader.o: glheader.cpp glheader.h
