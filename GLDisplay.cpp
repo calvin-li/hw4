@@ -25,15 +25,32 @@ static const GLfloat dice_buffer[] = {
 //list of form1i(glGetUniformLocation(mShaderProgramID, "is_dice"), files[num].compare("cube.obj")==0);
 //obj files we are using
 const QString files[] = {
-    "masterchief",
+    "ground",
+    "sword",
+    "sword",
+    "sword",
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
+Mesh Shapes[numFiles];
+
 const GLfloat translate_buffer[] = {
-    0.0f, 0.0f, 0.0f,
+    0.0, -2.0f, 0.0f,
+    0.0, 0.0f, 0.0f,
+    0.0, 0.0f, 0.0f,
+    0.0, 0.0f, 0.0f,
 };//translate_buffer
+const GLfloat scale_buffer[] = {
+    100.0f,
+    1.0f,
+    1.0f,
+    1.0f
+};//rotate_buffer
 const GLfloat rotate_buffer[] = {
     0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 180.0f,
+    0.0f, 0.0f, 45.0f,
+    0.0f, 0.0f, -45.0f,
 };//rotate_buffer
 
 // Constructor: Set everything to zero and ensure we have an OpenGL 3.2 context (on Mac)
@@ -41,22 +58,16 @@ GLDisplay::GLDisplay(QWidget *parent)
   : QGLWidget(new Core3_2_context(QGLFormat::defaultFormat()), parent),
     sensitivity(135), step(1.0/60),
     freeMouse(true),
-    mVertexArrayObjectID(0), mShaderProgramID(0),
+    mShaderProgramID(0),
     mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(-2.0),
     mNear(0.5f), mFar(5.0f), mFOV(45.0f),
     mR(0.0f), mTheta(0.0f), mPhi(0.0f),
     mRotateX(0.0), mRotateY(0.0), mRotateZ(0.0),
     red(0.5f), green(0.5f), blue(0.5f),
-    moveToOrigin(glm::mat4(1.0f)), scaleToCube(glm::mat4(1.0f)),
     lightX(0.0f), lightY(0.0f), lightZ(2.0),
-    intensity(.2*ViewerMainWindow::intensityMax),
-        shine(.5f*ViewerMainWindow::shineMax)
+    intensity(.5*ViewerMainWindow::intensityMax),
+    shine(.5f*ViewerMainWindow::shineMax)
 {
-    mObjectBufferID[0] = 0;
-    mObjectBufferID[1] = 0;
-    mObjectBufferID[2] = 0;
-    mObjectBufferID[3] = 0;
-
     //display tracks mouse movement on mouseover,
     //without having to click it
     setMouseTracking(true);
@@ -76,15 +87,18 @@ GLDisplay::GLDisplay(QWidget *parent)
 void GLDisplay::initializeGL()
 {
     // Generate VAO to store information on graphics board
-    glGenVertexArrays(1, &mVertexArrayObjectID);
-    glBindVertexArray(mVertexArrayObjectID);
+    for(int i=0; i<numFiles; i++){
+        glGenVertexArrays(1, &Shapes[i].mVertexArrayObjectID);
+        glBindVertexArray(Shapes[i].mVertexArrayObjectID);
 
-    // Create four buffers, one for vertices,
-    //    one for colors, one for normals, one for indices
-    glGenBuffers(5, mObjectBufferID);
+        // Create four buffers, one for vertices,
+        // one for colors, one for normals, one for indices
+        glGenBuffers(4, Shapes[i].mObjectBufferID);
+    }//for
 
     // Black background
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(0.117f, 0.565f, 1.0f, 0.0f);
+
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -139,139 +153,90 @@ void GLDisplay::paintGL()
 
 void GLDisplay::load(int num){
 
-    Mesh *shape = new Mesh();
+    Mesh *shape = &Shapes[num];
     load_obj((files[num] + ".obj").toStdString().c_str(), shape);
 
-    index_buffer_size = shape->elements.size();
-    vertex_buffer_size = shape->vertices.size();
-    uv_buffer_size = shape->uvs.size();
-		GLuint num_normal = shape->normals.size();
+    shape->v_buffer_size = shape->vertices.size() * sizeof(shape->vertices[0]);
+    shape->u_buffer_size = shape->uvs.size() * sizeof(shape->uvs[0]);
+    shape->n_buffer_size = shape->normals.size() * sizeof(shape->normals[0]);
+    shape->e_buffer_size = shape->elements.size() * sizeof(shape->elements[0]);
 
     GLfloat minX = 0.0f, maxX = 0.0f;
     GLfloat minY = 0.0f, maxY = 0.0f;
     GLfloat minZ = 0.0f, maxZ = 0.0f;
     GLfloat x, y, z;
 
-    GLfloat vertex_buffer[vertex_buffer_size*4];
-    GLfloat color_buffer [vertex_buffer_size*3];
-    GLfloat normal_buffer[num_normal*4];
-    GLfloat uv_buffer		 [uv_buffer_size*2];
-		GLuint index_buffer	 [index_buffer_size];
-
     // vertex buffer
-    for(size_t i=0; i < vertex_buffer_size; i++){
+    for(size_t i=0; i < shape->vertices.size(); i++){
         x = shape->vertices[i].x;
-        vertex_buffer[i*4] = x;
             maxX = max(maxX, x);
             minX = min(minX, x);
 
         y = shape->vertices[i].y;
-        vertex_buffer[i*4+1] = y;
             maxY = max(maxY, y);
             minY = min(minY, y);
 
         z = shape->vertices[i].z;
-        vertex_buffer[i*4+2] = z;
             maxZ = max(maxZ, z);
             minZ = min(minZ, z);
-
-        vertex_buffer[i*4+3] = 1;
     }//for
-
-    // color buffer
-    for(size_t i=0; i < vertex_buffer_size; i++){
-        color_buffer[i*3] = red;
-        color_buffer[i*3+1] = green;
-        color_buffer[i*3+2] = blue;
-    }//for
-
-    // normal buffer
-    for(size_t i=0; i < num_normal; i++){
-        normal_buffer[i*4] = shape->normals[i].x;
-        normal_buffer[i*4+1] = shape->normals[i].y;
-        normal_buffer[i*4+2] = shape->normals[i].z;
-        normal_buffer[i*4+3] = 0;
-    }//for
-
-    // uv buffer
-    for(size_t i = 0, j = 0; i < uv_buffer_size; i++, j+=2){
-        uv_buffer[j	 ] = shape->uvs[i].x;
-        uv_buffer[j+1] = shape->uvs[i].y;
-    }//for
-
-    // index buffer
-    for(size_t i=0; i < index_buffer_size; i++){
-        index_buffer[i] = shape->elements[i];
-    }//for
-
-    GLuint sizeofvertex = sizeof(vertex_buffer);
-    GLuint sizeofcolor = sizeof(color_buffer);
-    GLuint sizeofnormal = sizeof(normal_buffer);
-    GLuint sizeofUV = sizeof(uv_buffer);
-    GLuint sizeofindex = sizeof(index_buffer);
 
     //set scale and translate matrices
-    moveToOrigin[3][0] = (minX + maxX)/-2;
-    moveToOrigin[3][1] = (minY + maxY)/-2;
-    moveToOrigin[3][2] = (minZ + maxZ)/-2;
+    shape->moveToOrigin[3][0] = (minX + maxX)/-2;
+    shape->moveToOrigin[3][1] = (minY + maxY)/-2;
+    shape->moveToOrigin[3][2] = (minZ + maxZ)/-2;
 
     GLfloat bounds = 0.0f;
-    if(bounds < abs(minX+moveToOrigin[3][0]))
-        bounds = abs(minX+moveToOrigin[3][0]);
-    if(bounds < maxX+moveToOrigin[3][0])
-        bounds = maxX+moveToOrigin[3][0];
+    if(bounds < abs(minX+shape->moveToOrigin[3][0]))
+        bounds = abs(minX+shape->moveToOrigin[3][0]);
+    if(bounds < maxX+shape->moveToOrigin[3][0])
+        bounds = maxX+shape->moveToOrigin[3][0];
 
-    if(bounds < abs(minY+moveToOrigin[3][1]))
-        bounds = abs(minY+moveToOrigin[3][1]);
-    if(bounds < maxY+moveToOrigin[3][1])
-        bounds = maxY+moveToOrigin[3][1];
+    if(bounds < abs(minY+shape->moveToOrigin[3][1]))
+        bounds = abs(minY+shape->moveToOrigin[3][1]);
+    if(bounds < maxY+shape->moveToOrigin[3][1])
+        bounds = maxY+shape->moveToOrigin[3][1];
 
-    if(bounds < abs(minZ+moveToOrigin[3][2]))
-        bounds = abs(minZ+moveToOrigin[3][2]);
-    if(bounds < maxZ+moveToOrigin[3][2])
-        bounds = maxZ+moveToOrigin[3][2];
-    bounds = .75/bounds;
-    scaleToCube = glm::scale(bounds, bounds, bounds);
-
-    // Black background
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    if(bounds < abs(minZ+shape->moveToOrigin[3][2]))
+        bounds = abs(minZ+shape->moveToOrigin[3][2]);
+    if(bounds < maxZ+shape->moveToOrigin[3][2])
+        bounds = maxZ+shape->moveToOrigin[3][2];
+    bounds = scale_buffer[num] * 0.75/bounds;
+    shape->scaleToCube = glm::scale(bounds, bounds, bounds);
 
     // Load vertex data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeofvertex, vertex_buffer, GL_STATIC_DRAW);
-
-    // Load color data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeofcolor, color_buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[0]);
+    glBufferData(GL_ARRAY_BUFFER, shape->v_buffer_size, &shape->vertices[0], GL_STATIC_DRAW);
 
     // Load normal data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeofnormal, normal_buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[1]);
+    glBufferData(GL_ARRAY_BUFFER, shape->n_buffer_size, &shape->normals[0], GL_STATIC_DRAW);
 
     // Load UV data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeofUV, uv_buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[2]);
+    glBufferData(GL_ARRAY_BUFFER, shape->u_buffer_size, &shape->uvs[0], GL_STATIC_DRAW);
 
     // Load index data into buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mObjectBufferID[4]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeofindex, index_buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->mObjectBufferID[3]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, shape->e_buffer_size, &shape->elements[0], GL_STATIC_DRAW);
 
-    Image diceImage;
-    ImageLoad((files[num] + ".bmp").toStdString().c_str(), &diceImage);
+    Image texImage;
+    ImageLoad((files[num] + ".bmp").toStdString().c_str(), &texImage);
 
     glGenTextures(1, &mTextureID);
     glBindTexture(GL_TEXTURE_2D, mTextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, diceImage.sizeX, diceImage.sizeY,
-                 0, GL_BGR, GL_UNSIGNED_BYTE, diceImage.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texImage.sizeX, texImage.sizeY,
+                 0, GL_BGR, GL_UNSIGNED_BYTE, texImage.data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
 }//load
 
 void GLDisplay::draw(int num){
+    Mesh *shape = &Shapes[num];
 
     glm::mat4 model = glm::mat4(1.0f);
     model[3][0] += translate_buffer[num*3] + mTranslateX;
@@ -289,7 +254,7 @@ void GLDisplay::draw(int num){
     glm::mat4 lightMatrix = glm::transpose(glm::inverse(view));
     glm::vec4 light = lightMatrix * glm::vec4(lightX, lightY, lightZ, 1);
 
-    glm::mat4 MVP = projection * view * model * scaleToCube * moveToOrigin;
+    glm::mat4 MVP = projection * view * model * shape->scaleToCube * shape->moveToOrigin;
 
     // Enable vertex and fragment processing
     glUseProgram(smoothShaderID);
@@ -305,25 +270,25 @@ void GLDisplay::draw(int num){
     glUniform1f(glGetUniformLocation(mShaderProgramID, "intensity"), intensity);
     glUniform1f(glGetUniformLocation(mShaderProgramID, "shine"), shine*shine);
 
+    //Pass color to shaders
+    glUniform1f(glGetUniformLocation(mShaderProgramID, "red"), red);
+    glUniform1f(glGetUniformLocation(mShaderProgramID, "blue"), blue);
+    glUniform1f(glGetUniformLocation(mShaderProgramID, "green"), green);
+
     // Associate positions and colors with corresponding attributes in shader
     GLuint positionAttribute = glGetAttribLocation(mShaderProgramID, "vertexPos_modelspace");
     glEnableVertexAttribArray(positionAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[0]);
     glVertexAttribPointer(positionAttribute, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    GLuint colorAttribute = glGetAttribLocation(mShaderProgramID, "vertexColor");
-    glEnableVertexAttribArray(colorAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[1]);
-    glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     GLuint normalAttribute = glGetAttribLocation(mShaderProgramID, "vertexNormal");
     glEnableVertexAttribArray(normalAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[2]);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[1]);
     glVertexAttribPointer(normalAttribute, 4, GL_FLOAT, GL_TRUE, 0, (void*)0);
 
     GLuint UVAttribute = glGetAttribLocation(mShaderProgramID, "vertexUV");
     glEnableVertexAttribArray(UVAttribute);
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[3]);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[2]);
     glVertexAttribPointer(UVAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glActiveTexture(GL_TEXTURE0);
@@ -331,12 +296,11 @@ void GLDisplay::draw(int num){
     glUniform1i(glGetAttribLocation(mShaderProgramID, "myTextureSampler"), 0);
 
     // Bind index buffer and draw as triangles
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mObjectBufferID[4]);
-    glDrawElements(GL_TRIANGLES, index_buffer_size, GL_UNSIGNED_INT, (void*)0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->mObjectBufferID[3]);
+    glDrawElements(GL_TRIANGLES, Shapes[num].elements.size(), GL_UNSIGNED_INT, (void*)0);
 
     // It is good practive to disable these once we are done
     glDisableVertexAttribArray(positionAttribute);
-    glDisableVertexAttribArray(colorAttribute);
     glDisableVertexAttribArray(normalAttribute);
     glDisableVertexAttribArray(UVAttribute);
 }//draw
@@ -394,18 +358,6 @@ void GLDisplay::setColor(double red, double green, double blue){
     this->green = green;
     this->blue = blue;
 
-    GLfloat color_buffer[vertex_buffer_size*3];
-    for(size_t i=0; i<vertex_buffer_size; i++){
-        color_buffer[i*3] = red;
-        color_buffer[i*3+1] = green;
-        color_buffer[i*3+2] = blue;
-    }//for
-
-    GLuint sizeofcolor = sizeof(color_buffer);
-    // Load color data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mObjectBufferID[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeofcolor, color_buffer, GL_STATIC_DRAW);
-
     updateGL();
 }//setColor
 
@@ -449,8 +401,7 @@ void GLDisplay::mouseMoveEvent(QMouseEvent *e){
 
     GLfloat dy = (e->y() - height()/2);
     mPhi += dy*sensitivity/height();
-    if(mPhi > 90) mPhi = 90;
-    else if (mPhi < -90) mPhi = -90;
+    mPhi = (int)mPhi % 360;
 
     QPoint global = mapToGlobal(QPoint(width()/2,height()/2));
     QCursor::setPos(global);
@@ -537,8 +488,14 @@ void GLDisplay::keyReleaseEvent(QKeyEvent *e){
 }//keyReleaseEvent
 
 void GLDisplay::move(glm::vec4 direction){
+    //Rotate up/down. Determine which axis to rotate around.
+    if(direction.x != 0)
+        direction = glm::rotate(mPhi, glm::vec3(0, 0, 1)) * direction;
+    else
+        direction = glm::rotate(mPhi, glm::vec3(1, 0, 0)) * direction;
     direction = glm::rotate(mTheta, glm::vec3(0, 1, 0)) * direction;
     mTranslateX -= direction.x;
+    mTranslateY += direction.y;
     mTranslateZ -= direction.z;
 
     updateGL();

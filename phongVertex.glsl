@@ -1,12 +1,15 @@
 #version 150
 
 in vec4 vertexPos_modelspace;
-in vec3 vertexColor;
 in vec4 vertexNormal;
 in vec2 vertexUV;
 
 uniform mat4 MVP;
 uniform mat4 normalMatrix;
+
+uniform float red;
+uniform float blue;
+uniform float green;
 
 uniform vec4 light;
 uniform float intensity;
@@ -32,7 +35,7 @@ void main()
 
    // Pass through variables
    fragmentPosition = transformedVertexPos;
-   vColor = vertexColor;
+   vColor = vec3(red, blue, green);
 
    fragUV = vertexUV;
 }//main

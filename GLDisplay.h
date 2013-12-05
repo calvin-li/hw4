@@ -39,8 +39,6 @@ class GLDisplay : public QGLWidget
         //previous mouse coordinates (used for movement)
 
     private:
-        GLuint mVertexArrayObjectID;
-        GLuint mObjectBufferID[5];
         GLuint mTextureID;
         GLuint mShaderProgramID;
 
@@ -66,13 +64,6 @@ class GLDisplay : public QGLWidget
         float red;
         float green;
         float blue;
-
-        GLuint vertex_buffer_size,
-        			 index_buffer_size,
-							 uv_buffer_size;
-
-        glm::mat4 moveToOrigin;
-        glm::mat4 scaleToCube;
 
         float lightX;
         float lightY;
