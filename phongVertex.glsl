@@ -11,7 +11,6 @@ uniform mat4 normalMatrix;
 uniform vec4 light;
 uniform float intensity;
 uniform float shine;
-uniform int is_dice;
 
 out vec4 fragmentPosition;
 out vec3 vColor;
