@@ -11,7 +11,6 @@ uniform vec4 light;
 uniform float intensity;
 uniform float shine;
 uniform sampler2D myTextureSampler;
-uniform int is_dice;
 
 out vec3 color;
 

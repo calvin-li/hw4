@@ -29,6 +29,6 @@ HEADERS  += \
     Core3_2_context.h \
     GLDisplay.h \
     glheader.h \
-    ViewerMainWindow.h
-		readObj.h \
-		readBMP.h
+    ViewerMainWindow.h \
+    readObj.h \
+    readBMP.h

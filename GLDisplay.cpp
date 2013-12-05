@@ -25,7 +25,7 @@ static const GLfloat dice_buffer[] = {
 //list of form1i(glGetUniformLocation(mShaderProgramID, "is_dice"), files[num].compare("cube.obj")==0);
 //obj files we are using
 const QString files[] = {
-    "pillow.obj"
+    "masterchief",
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
@@ -42,7 +42,7 @@ GLDisplay::GLDisplay(QWidget *parent)
     sensitivity(135), step(1.0/60),
     freeMouse(true),
     mVertexArrayObjectID(0), mShaderProgramID(0),
-    mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(0.0),
+    mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(-2.0),
     mNear(0.5f), mFar(5.0f), mFOV(45.0f),
     mR(0.0f), mTheta(0.0f), mPhi(0.0f),
     mRotateX(0.0), mRotateY(0.0), mRotateZ(0.0),
@@ -92,7 +92,10 @@ void GLDisplay::initializeGL()
     glSetup();
 
     setMinimumSize(0, 0);
-    load(0);
+
+    for(int i=0; i<numFiles; i++){
+        load(i);
+    }//for
 
     // Load and compile our shaders
     smoothShaderID = LoadShaders("smoothVertex.glsl", "smoothFragment.glsl");
@@ -137,7 +140,7 @@ void GLDisplay::paintGL()
 void GLDisplay::load(int num){
 
     Mesh *shape = new Mesh();
-    load_obj(files[num].toStdString().c_str(), shape);
+    load_obj((files[num] + ".obj").toStdString().c_str(), shape);
 
     index_buffer_size = shape->elements.size();
     vertex_buffer_size = shape->vertices.size();
@@ -155,7 +158,7 @@ void GLDisplay::load(int num){
     GLfloat uv_buffer		 [uv_buffer_size*2];
 		GLuint index_buffer	 [index_buffer_size];
 
-		// vertex buffer
+    // vertex buffer
     for(size_t i=0; i < vertex_buffer_size; i++){
         x = shape->vertices[i].x;
         vertex_buffer[i*4] = x;
@@ -175,14 +178,14 @@ void GLDisplay::load(int num){
         vertex_buffer[i*4+3] = 1;
     }//for
 
-		// color buffer
+    // color buffer
     for(size_t i=0; i < vertex_buffer_size; i++){
         color_buffer[i*3] = red;
         color_buffer[i*3+1] = green;
         color_buffer[i*3+2] = blue;
     }//for
 
-		// normal buffer
+    // normal buffer
     for(size_t i=0; i < num_normal; i++){
         normal_buffer[i*4] = shape->normals[i].x;
         normal_buffer[i*4+1] = shape->normals[i].y;
@@ -190,13 +193,13 @@ void GLDisplay::load(int num){
         normal_buffer[i*4+3] = 0;
     }//for
 
-		// uv buffer
-		for(size_t i = 0, j = 0; i < uv_buffer_size; i++, j+=2){
-			uv_buffer[j	 ] = shape->uvs[i].x;
-			uv_buffer[j+1] = shape->uvs[i].y;
-		}//for
+    // uv buffer
+    for(size_t i = 0, j = 0; i < uv_buffer_size; i++, j+=2){
+        uv_buffer[j	 ] = shape->uvs[i].x;
+        uv_buffer[j+1] = shape->uvs[i].y;
+    }//for
 
-		// index buffer
+    // index buffer
     for(size_t i=0; i < index_buffer_size; i++){
         index_buffer[i] = shape->elements[i];
     }//for
@@ -254,7 +257,7 @@ void GLDisplay::load(int num){
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeofindex, index_buffer, GL_STATIC_DRAW);
 
     Image diceImage;
-    ImageLoad("pillow.bmp", &diceImage);
+    ImageLoad((files[num] + ".bmp").toStdString().c_str(), &diceImage);
 
     glGenTextures(1, &mTextureID);
     glBindTexture(GL_TEXTURE_2D, mTextureID);
@@ -300,8 +303,6 @@ void GLDisplay::draw(int num){
     glUniform4f(glGetUniformLocation(mShaderProgramID, "light"), light.x, light.y, light.z, light.w);
     glUniform1f(glGetUniformLocation(mShaderProgramID, "intensity"), intensity);
     glUniform1f(glGetUniformLocation(mShaderProgramID, "shine"), shine*shine);
-    glUniform1i(glGetUniformLocation(mShaderProgramID, "is_dice"), files[num].compare("cube.obj")==0);
-
 
     // Associate positions and colors with corresponding attributes in shader
     GLuint positionAttribute = glGetAttribLocation(mShaderProgramID, "vertexPos_modelspace");
@@ -447,8 +448,8 @@ void GLDisplay::mouseMoveEvent(QMouseEvent *e){
 
     GLfloat dy = (e->y() - height()/2);
     mPhi += dy*sensitivity/height();
-	if(mPhi > 90) mPhi = 90;
-	else if (mPhi < -90) mPhi = -90;
+    if(mPhi > 90) mPhi = 90;
+    else if (mPhi < -90) mPhi = -90;
 
     QPoint global = mapToGlobal(QPoint(width()/2,height()/2));
     QCursor::setPos(global);
