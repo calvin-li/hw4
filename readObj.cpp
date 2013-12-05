@@ -54,8 +54,8 @@ void load_obj(const char* filename, Mesh* mesh) {
 			glm::vec2 v;
 				s >> v.x;
 				s >> v.y;
-				//temp_t.push_back(v);
-				mesh->uvs.push_back(v);
+				temp_t.push_back(v);
+				//mesh->uvs.push_back(v);
 		}//else if
 		
 		else if(line.substr(0, 3) == "vn "){
@@ -65,12 +65,14 @@ void load_obj(const char* filename, Mesh* mesh) {
 				s >> v.x;
 				s >> v.y;
 				s >> v.z;
-				mesh->normals.push_back(v);
+				temp_n.push_back(v);
+				//mesh->normals.push_back(v);
 		}//else if
 
 		else if(line.substr(0, 2) == "f "){
 			GLuint v[3], t[3], n[3];
 
+			// vertices + textures + normals
 			if(sscanf(line.c_str(), "%*s %d/%d/%d %d/%d/%d %d/%d/%d",
 															&v[0],&t[0],&n[0], &v[1],&t[1],&n[1], &v[2],&t[2],&n[2]) == 9){
 				for(int i = 0; i < 3; i++){
@@ -79,6 +81,32 @@ void load_obj(const char* filename, Mesh* mesh) {
 					n[i] --;	n_elements.push_back(n[i]);
 				}//for
 			}//if
+
+			// vertices + textures
+//			else if(sscanf(line.c_str(), "%*s %d/%d %d/%d %d/%d",
+//																		&v[0],&t[0], &v[1],&t[1], &v[2],&t[2]) == 6){	
+//				for(int i = 0; i < 3; i++){
+//					v[i] --;	mesh->elements.push_back(v[i]);
+//					t[i] --;	t_elements.push_back(n[i]);
+//				}//for
+//			}//else if
+
+			// vertices + normals
+			else if(sscanf(line.c_str(), "%*s %d//%d %d//%d %d//%d",
+																		&v[0],&n[0], &v[1],&n[1], &v[2],&n[2]) == 6){	
+				for(int i = 0; i < 3; i++){
+					v[i] --;	mesh->elements.push_back(v[i]);
+					n[i] --;	n_elements.push_back(n[i]);
+				}//for
+			}//else if
+
+			// vertices
+			else if(sscanf(line.c_str(), "%*s %d %d %d",
+																		&v[0], &v[1], &v[2]) == 3){	
+				for(int i = 0; i < 3; i++){
+					v[i] --;	mesh->elements.push_back(v[i]);
+				}//for
+			}//else if
 
 			/*else{ // Missing things that we need
 				cout << "Cannot draw object with provided data. Abort program.\n";
@@ -91,18 +119,13 @@ void load_obj(const char* filename, Mesh* mesh) {
 		else{} // Everything else we don't care about
 	}//while
 
-	cout << mesh->elements.size();
 
 	for(unsigned int i = 0; i < mesh->elements.size(); i++){
-		GLuint v_index = mesh->elements[i],
-					 t_index = t_elements[i],
+		GLuint t_index = t_elements[i],
 					 n_index = n_elements[i];
 
-		//cout << mesh->elements[i] << endl;
-
-		//glm::vec4 v = temp_v[v_index];	mesh->vertices.push_back(v);
-		//glm::vec2 t = temp_t[t_index];	mesh->uvs.push_back(t);
-		//glm::vec3 n = temp_n[n_index];	mesh->normals.push_back(n);
+		glm::vec2 t = temp_t[t_index];	mesh->uvs.push_back(t);
+		glm::vec3 n = temp_n[n_index];	mesh->normals.push_back(n);
 	}//for
 }
 

@@ -25,7 +25,7 @@ static const GLfloat dice_buffer[] = {
 //list of form1i(glGetUniformLocation(mShaderProgramID, "is_dice"), files[num].compare("cube.obj")==0);
 //obj files we are using
 const QString files[] = {
-    "masterchief.obj", "sword.obj"
+    "pillow.obj"
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
@@ -254,7 +254,7 @@ void GLDisplay::load(int num){
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeofindex, index_buffer, GL_STATIC_DRAW);
 
     Image diceImage;
-    ImageLoad("masterchief.bmp", &diceImage);
+    ImageLoad("pillow.bmp", &diceImage);
 
     glGenTextures(1, &mTextureID);
     glBindTexture(GL_TEXTURE_2D, mTextureID);
