@@ -60,12 +60,12 @@ GLDisplay::GLDisplay(QWidget *parent)
     freeMouse(true),
     mShaderProgramID(0),
     mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(-2.0),
-    mNear(0.5f), mFar(5.0f), mFOV(45.0f),
+    mNear(0.5f), mFar(50.0f), mFOV(45.0f),
     mR(0.0f), mTheta(0.0f), mPhi(0.0f),
     mRotateX(0.0), mRotateY(0.0), mRotateZ(0.0),
     red(0.5f), green(0.5f), blue(0.5f),
     lightX(0.0f), lightY(0.0f), lightZ(2.0),
-    intensity(.5*ViewerMainWindow::intensityMax),
+    intensity(.9*ViewerMainWindow::intensityMax),
     shine(.5f*ViewerMainWindow::shineMax)
 {
     //display tracks mouse movement on mouseover,
@@ -160,6 +160,8 @@ void GLDisplay::load(int num){
     shape->u_buffer_size = shape->uvs.size() * sizeof(shape->uvs[0]);
     shape->n_buffer_size = shape->normals.size() * sizeof(shape->normals[0]);
     shape->e_buffer_size = shape->elements.size() * sizeof(shape->elements[0]);
+
+    cout << shape->uvs.size() << endl;
 
     GLfloat minX = 0.0f, maxX = 0.0f;
     GLfloat minY = 0.0f, maxY = 0.0f;
@@ -296,7 +298,6 @@ void GLDisplay::draw(int num){
     glUniform1i(glGetAttribLocation(mShaderProgramID, "myTextureSampler"), 0);
 
     // Bind index buffer and draw as triangles
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->mObjectBufferID[3]);
     glDrawElements(GL_TRIANGLES, Shapes[num].elements.size(), GL_UNSIGNED_INT, (void*)0);
 
     // It is good practive to disable these once we are done
