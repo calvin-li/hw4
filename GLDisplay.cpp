@@ -13,7 +13,7 @@
 //pi
 const double pi = 3.141592653589793238462;
 
-static const GLfloat dice_buffer[] = {
+const GLfloat dice_buffer[] = {
     .25f,0.0f, 0.5f,0.0f, 0.5f,0.5f, .25f,0.5f,
     .25f,0.5f, 0.5f,0.5f, 0.5f,1.0f, .25f,1.0f,
     .498,0.0f, .75f,0.0f, .75f,0.5f, .498,0.5f,
@@ -46,7 +46,7 @@ const GLfloat translate_buffer[] = {
     0.0, 0.0f, 0.0f,
     0.0, 0.0f, 0.0f,
 };//translate_buffer
-const GLfloat scale_buffer[] = {
+GLfloat scale_buffer[] = {
     100.0f,
     1.0f,
     1.0f,
@@ -118,7 +118,7 @@ void GLDisplay::initializeGL()
 
     glSetup();
 
-    setMinimumSize(0, 0);
+    setMinimumSize(0, 500);
 
     for(int i=0; i<numFiles; i++){
         load(i);
@@ -406,6 +406,10 @@ void GLDisplay::timerEvent(QTimerEvent *e){
 					move(glm::vec4(-step,0,0,0));
 			if(moving[right])
                     move(glm::vec4(step,0,0,0));
+            if(moving[up])
+                    move(glm::vec4(0,step,0,0));
+            if(moving[down])
+                    move(glm::vec4(0,-step,0,0));
 		}//if
     updateGL();
 }//timerEvent
@@ -466,6 +470,12 @@ void GLDisplay::keyPressEvent(QKeyEvent *e){
     case Qt::Key_Right:
         moving[right] = true;
         break;
+    case Qt::Key_Space:
+        moving[up] = true;
+        break;
+    case Qt::Key_Shift:
+        moving[down] = true;
+        break;
     default:
         QWidget::keyPressEvent(e);
         break;
@@ -496,6 +506,12 @@ void GLDisplay::keyReleaseEvent(QKeyEvent *e){
     case Qt::Key_D:
     case Qt::Key_Right:
         moving[right] = false;
+        break;
+    case Qt::Key_Space:
+        moving[up] = false;
+        break;
+    case Qt::Key_Shift:
+        moving[down] = false;
         break;
     case Qt::Key_Escape:
         freeMouse = true;
@@ -534,3 +550,15 @@ void GLDisplay::move(glm::vec4 direction){
 
     updateGL();
 }//move
+
+void GLDisplay::reset(){
+		mTranslateX = 0;
+		mTranslateY = 0;
+        mTranslateZ = -2.5;
+		
+		mR = 0; 
+		mTheta = 0; 
+		mPhi = 0;
+
+		updateGL();
+}//reset

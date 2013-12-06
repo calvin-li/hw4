@@ -20,6 +20,7 @@ class GLDisplay : public QGLWidget
         void setLight(double aI, double dR);
         void setColor(double red, double green, double blue);
         void setShading(int option);
+				void reset();
 
         static const int smoothOptionNumber = 0;
         static const int phongOptionNumber = 1;
@@ -74,11 +75,13 @@ class GLDisplay : public QGLWidget
         float shine;
 
         //movement keys
-        bool moving[4];
+        bool moving[6];
         static const unsigned int forward = 0;
         static const unsigned int back = 1;
         static const unsigned int left = 2;
         static const unsigned int right = 3;
+        static const unsigned int up = 4;
+        static const unsigned int down = 5;
         void move(glm::vec4);
 				void objectSpinning();
 

@@ -45,13 +45,9 @@ ViewerMainWindow::ViewerMainWindow()
 
     QHBoxLayout *refreshLayout = new QHBoxLayout();
 
-    controlsLayout->addWidget(lightPosGroupBox);
     controlsLayout->addWidget(viewGroupBox);
-    controlsLayout->addWidget(cameraGroupBox);
-    controlsLayout->addWidget(rotateGroupBox);
     controlsLayout->addWidget(lightGroupBox);
     controlsLayout->addWidget(colorGroupBox);
-    controlsLayout->addWidget(shadingGroupBox);
     controlsLayout->addLayout(refreshLayout);
     controlsLayout->addStretch();
 
@@ -253,6 +249,13 @@ ViewerMainWindow::ViewerMainWindow()
     QObject::connect(shadingOptions, SIGNAL(currentIndexChanged(QString)),
                      this, SLOT(shadingChanged(QString)));
 
+		//reset button
+		QPushButton *reset = new QPushButton("Reset");
+		refreshLayout->addWidget(reset);
+		QObject::connect(reset, SIGNAL(clicked()), this, SLOT(reset()));
+
+
+
     //refresh button
     refreshLayout->addStretch();
     QPushButton *refresh = new QPushButton("Refresh");
@@ -327,3 +330,7 @@ void ViewerMainWindow::refresh(){
     lightChanged();
     colorChanged();
 }//refresh
+
+void ViewerMainWindow::reset(){
+		mGLDisplay->reset();
+}
