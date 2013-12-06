@@ -46,7 +46,7 @@ const GLfloat scale_buffer[] = {
     1.0f,
     1.0f
 };//rotate_buffer
-const GLfloat rotate_buffer[] = {
+GLfloat rotate_buffer[] = {
     0.0f, 0.0f, 0.0f,
     0.0f, 0.0f, 180.0f,
     0.0f, 0.0f, 45.0f,
@@ -246,7 +246,7 @@ void GLDisplay::draw(int num){
     model[3][2] += translate_buffer[num*3 + 2] + mTranslateZ;
 
     //generate rotation matrices
-    glm::mat4 rotateX = glm::rotate(rotate_buffer[num*3], glm::vec3(1, 0, 0));
+    glm::mat4 rotateX = glm::rotate(rotate_buffer[num*3], 		glm::vec3(1, 0, 0));
     glm::mat4 rotateY = glm::rotate(rotate_buffer[num*3 + 1], glm::vec3(0, 1, 0));
     glm::mat4 rotateZ = glm::rotate(rotate_buffer[num*3 + 2], glm::vec3(0, 0, 1));
 
@@ -377,16 +377,21 @@ void GLDisplay::setShading(int option){
 
 void GLDisplay::timerEvent(QTimerEvent *e){
     if(e == 0){}
-    if(freeMouse)
-        return;
-    if(moving[forward])
-        move(glm::vec4(0,0,-step,0));
-    if(moving[back])
-        move(glm::vec4(0,0,step,0));
-    if(moving[left])
-        move(glm::vec4(-step,0,0,0));
-    if(moving[right])
-        move(glm::vec4(step,0,0,0));
+		// Rotating a single object
+		objectSpinning(); 
+
+    if(!freeMouse){			
+			// Moving the camera
+			if(moving[forward])
+					move(glm::vec4(0,0,-step,0));
+			if(moving[back])
+					move(glm::vec4(0,0,step,0));
+			if(moving[left])
+					move(glm::vec4(-step,0,0,0));
+			if(moving[right])
+					move(glm::vec4(step,0,0,0));
+		}//if
+	updateGL();
 }//timerEvent
 
 //respond to mouse events
@@ -487,6 +492,27 @@ void GLDisplay::keyReleaseEvent(QKeyEvent *e){
     }//switch
 
 }//keyReleaseEvent
+
+void GLDisplay::objectSpinning(){
+	int obj_id = 2;
+
+	mRotateX ++;
+	mRotateY ++;
+	mRotateZ ++;
+
+	if(mRotateX >= 360)
+		mRotateX -= 360;
+
+	if(mRotateY >= 360)
+		mRotateY -= 360;
+
+	if(mRotateZ >= 360)
+		mRotateZ -= 360;
+	
+	rotate_buffer[3 * obj_id] 		= mRotateX;
+	rotate_buffer[3 * obj_id + 1] = mRotateY;
+	rotate_buffer[3 * obj_id + 2]	= mRotateZ;
+}
 
 void GLDisplay::move(glm::vec4 direction){
     //Rotate up/down. Determine which axis to rotate around.

@@ -79,6 +79,7 @@ class GLDisplay : public QGLWidget
         static const unsigned int left = 2;
         static const unsigned int right = 3;
         void move(glm::vec4);
+				void objectSpinning();
 
         glm::mat4 projection;
         glm::mat4 view;
