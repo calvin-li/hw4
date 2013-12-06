@@ -29,14 +29,20 @@ const QString files[] = {
     "sword",
     "sword",
     "sword",
+    "sword",
+    "sword",
+    "sword",
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
 Mesh Shapes[numFiles];
 
 const GLfloat translate_buffer[] = {
-    0.0, -2.0f, 0.0f,
-    0.0, 0.0f, 0.0f,
+    0.0, -2.0f, 50.0f,
+    0.8f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f,
+    -0.8f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f,
     0.0, 0.0f, 0.0f,
     0.0, 0.0f, 0.0f,
 };//translate_buffer
@@ -44,9 +50,15 @@ const GLfloat scale_buffer[] = {
     100.0f,
     1.0f,
     1.0f,
-    1.0f
-};//rotate_buffer
+    1.0f,
+    1.0f,
+    1.0f,
+    1.0f,
+};//scale_buffer
 GLfloat rotate_buffer[] = {
+    0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 180.0f,
     0.0f, 0.0f, 0.0f,
     0.0f, 0.0f, 180.0f,
     0.0f, 0.0f, 45.0f,
@@ -56,10 +68,10 @@ GLfloat rotate_buffer[] = {
 // Constructor: Set everything to zero and ensure we have an OpenGL 3.2 context (on Mac)
 GLDisplay::GLDisplay(QWidget *parent)
   : QGLWidget(new Core3_2_context(QGLFormat::defaultFormat()), parent),
-    sensitivity(135), step(1.0/60),
+    sensitivity(135), step(3.0/60),
     freeMouse(true),
     mShaderProgramID(0),
-    mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(-2.0),
+    mTranslateX(0.0), mTranslateY(0.0), mTranslateZ(-2.5),
     mNear(0.5f), mFar(50.0f), mFOV(45.0f),
     mR(0.0f), mTheta(0.0f), mPhi(0.0f),
     mRotateX(0.0), mRotateY(0.0), mRotateZ(0.0),
@@ -87,9 +99,10 @@ GLDisplay::GLDisplay(QWidget *parent)
 void GLDisplay::initializeGL()
 {
     // Generate VAO to store information on graphics board
+    mVertexArrayObjectID = new GLuint[numFiles];
+    glGenVertexArrays(numFiles, mVertexArrayObjectID);
     for(int i=0; i<numFiles; i++){
-        glGenVertexArrays(1, &Shapes[i].mVertexArrayObjectID);
-        glBindVertexArray(Shapes[i].mVertexArrayObjectID);
+        glBindVertexArray(mVertexArrayObjectID[i]);
 
         // Create four buffers, one for vertices,
         // one for colors, one for normals, one for indices
@@ -186,23 +199,22 @@ void GLDisplay::load(int num){
     shape->moveToOrigin[3][1] = (minY + maxY)/-2;
     shape->moveToOrigin[3][2] = (minZ + maxZ)/-2;
 
-    GLfloat bounds = 0.0f;
-    if(bounds < abs(minX+shape->moveToOrigin[3][0]))
-        bounds = abs(minX+shape->moveToOrigin[3][0]);
-    if(bounds < maxX+shape->moveToOrigin[3][0])
-        bounds = maxX+shape->moveToOrigin[3][0];
+    if(shape->bounds < abs(minX+shape->moveToOrigin[3][0]))
+        shape->bounds = abs(minX+shape->moveToOrigin[3][0]);
+    if(shape->bounds < maxX+shape->moveToOrigin[3][0])
+        shape->bounds = maxX+shape->moveToOrigin[3][0];
 
-    if(bounds < abs(minY+shape->moveToOrigin[3][1]))
-        bounds = abs(minY+shape->moveToOrigin[3][1]);
-    if(bounds < maxY+shape->moveToOrigin[3][1])
-        bounds = maxY+shape->moveToOrigin[3][1];
+    if(shape->bounds < abs(minY+shape->moveToOrigin[3][1]))
+        shape->bounds = abs(minY+shape->moveToOrigin[3][1]);
+    if(shape->bounds < maxY+shape->moveToOrigin[3][1])
+        shape->bounds = maxY+shape->moveToOrigin[3][1];
 
-    if(bounds < abs(minZ+shape->moveToOrigin[3][2]))
-        bounds = abs(minZ+shape->moveToOrigin[3][2]);
-    if(bounds < maxZ+shape->moveToOrigin[3][2])
-        bounds = maxZ+shape->moveToOrigin[3][2];
-    bounds = scale_buffer[num] * 0.75/bounds;
-    shape->scaleToCube = glm::scale(bounds, bounds, bounds);
+    if(shape->bounds < abs(minZ+shape->moveToOrigin[3][2]))
+        shape->bounds = abs(minZ+shape->moveToOrigin[3][2]);
+    if(shape->bounds < maxZ+shape->moveToOrigin[3][2])
+        shape->bounds = maxZ+shape->moveToOrigin[3][2];
+    shape->bounds = scale_buffer[num] * 0.75/shape->bounds;
+    shape->scaleToCube = glm::scale(shape->bounds, shape->bounds, shape->bounds);
 
     // Load vertex data into buffer
     glBindBuffer(GL_ARRAY_BUFFER, shape->mObjectBufferID[0]);
@@ -220,13 +232,12 @@ void GLDisplay::load(int num){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->mObjectBufferID[3]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, shape->e_buffer_size, &shape->elements[0], GL_STATIC_DRAW);
 
-    Image texImage;
-    ImageLoad((files[num] + ".bmp").toStdString().c_str(), &texImage);
+    ImageLoad((files[num] + ".bmp").toStdString().c_str(), &shape->texImage);
 
-    glGenTextures(1, &mTextureID);
-    glBindTexture(GL_TEXTURE_2D, mTextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texImage.sizeX, texImage.sizeY,
-                 0, GL_RGB, GL_UNSIGNED_BYTE, texImage.data);
+    glGenTextures(1, &shape->mTextureID);
+    glBindTexture(GL_TEXTURE_2D, shape->mTextureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, shape->texImage.sizeX, shape->texImage.sizeY,
+                 0, GL_RGB, GL_UNSIGNED_BYTE, shape->texImage.data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -238,23 +249,30 @@ void GLDisplay::load(int num){
 void GLDisplay::draw(int num){
     Mesh *shape = &Shapes[num];
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model[3][0] += translate_buffer[num*3] + mTranslateX;
-    model[3][1] += translate_buffer[num*3 + 1] + mTranslateY;
-    model[3][2] += translate_buffer[num*3 + 2] + mTranslateZ;
+    shape->model = glm::mat4(1.0f);
+    if(num == 0){
+        shape->model[3][0] = translate_buffer[num*3];
+        shape->model[3][1] = translate_buffer[num*3 + 1] + mTranslateY;
+        shape->model[3][2] = translate_buffer[num*3 + 2];
+    }//if
+    else{
+        shape->model[3][0] = translate_buffer[num*3] + mTranslateX;
+        shape->model[3][1] = translate_buffer[num*3 + 1] + mTranslateY;
+        shape->model[3][2] = translate_buffer[num*3 + 2] + mTranslateZ;
+    }//else
 
     //generate rotation matrices
-    glm::mat4 rotateX = glm::rotate(rotate_buffer[num*3], 		glm::vec3(1, 0, 0));
+    glm::mat4 rotateX = glm::rotate(rotate_buffer[num*3], glm::vec3(1, 0, 0));
     glm::mat4 rotateY = glm::rotate(rotate_buffer[num*3 + 1], glm::vec3(0, 1, 0));
     glm::mat4 rotateZ = glm::rotate(rotate_buffer[num*3 + 2], glm::vec3(0, 0, 1));
 
-    model = model * rotateZ * rotateY * rotateX;
+    shape->model = shape->model * rotateZ * rotateY * rotateX;
 
-    glm::mat4 normalMatrix = glm::transpose(glm::inverse(view*model));
+    glm::mat4 normalMatrix = glm::transpose(glm::inverse(view*shape->model));
     glm::mat4 lightMatrix = glm::transpose(glm::inverse(view));
     glm::vec4 light = lightMatrix * glm::vec4(lightX, lightY, lightZ, 1);
 
-    glm::mat4 MVP = projection * view * model * shape->scaleToCube * shape->moveToOrigin;
+    glm::mat4 MVP = projection * view * shape->model * shape->scaleToCube * shape->moveToOrigin;
 
     // Enable vertex and fragment processing
     glUseProgram(smoothShaderID);
@@ -292,7 +310,7 @@ void GLDisplay::draw(int num){
     glVertexAttribPointer(UVAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mTextureID);
+    glBindTexture(GL_TEXTURE_2D, shape->mTextureID);
     glUniform1i(glGetAttribLocation(mShaderProgramID, "myTextureSampler"), 0);
 
     // Bind index buffer and draw as triangles
@@ -387,9 +405,9 @@ void GLDisplay::timerEvent(QTimerEvent *e){
 			if(moving[left])
 					move(glm::vec4(-step,0,0,0));
 			if(moving[right])
-					move(glm::vec4(step,0,0,0));
+                    move(glm::vec4(step,0,0,0));
 		}//if
-	updateGL();
+    updateGL();
 }//timerEvent
 
 //respond to mouse events
@@ -492,24 +510,15 @@ void GLDisplay::keyReleaseEvent(QKeyEvent *e){
 }//keyReleaseEvent
 
 void GLDisplay::objectSpinning(){
-	int obj_id = 2;
+    int obj_id[2] = {
+        5, 6,
+    };//obj_id
 
-	mRotateX ++;
-	mRotateY ++;
-	mRotateZ ++;
-
-	if(mRotateX >= 360)
-		mRotateX -= 360;
-
-	if(mRotateY >= 360)
-		mRotateY -= 360;
-
-	if(mRotateZ >= 360)
-		mRotateZ -= 360;
-	
-	rotate_buffer[3 * obj_id] 		= mRotateX;
-	rotate_buffer[3 * obj_id + 1] = mRotateY;
-	rotate_buffer[3 * obj_id + 2]	= mRotateZ;
+    for(int i=0; i< 2; i++){
+        rotate_buffer[3 * obj_id[i] + 2]++;
+        rotate_buffer[3 * obj_id[i] + 2] =
+            (int)rotate_buffer[3 * obj_id[i] + 2] % 360;
+    }//for
 }
 
 void GLDisplay::move(glm::vec4 direction){

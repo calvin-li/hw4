@@ -10,6 +10,7 @@ class GLDisplay : public QGLWidget
 
     public:
         GLDisplay(QWidget *parent = 0);
+        ~GLDisplay(){delete[] mVertexArrayObjectID;}
 
         // Set the displayed objects translation
         void setLightPos(double lx, double ly, double lz);
@@ -39,9 +40,9 @@ class GLDisplay : public QGLWidget
         //previous mouse coordinates (used for movement)
 
     private:
-        GLuint mTextureID;
-        GLuint mShaderProgramID;
+        GLuint *mVertexArrayObjectID;
 
+        GLuint mShaderProgramID;
         GLuint smoothShaderID;
         GLuint phongShaderID;
 

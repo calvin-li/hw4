@@ -108,7 +108,7 @@ void load_obj(const char* filename, Mesh* mesh) {
 				s >> v.x;
 				s >> v.y;
 				s >> v.z;
-				v.w = 1.0;
+                v.w = 1.0;
                 //raw_v.push_back(v);
                 raw_v.push_back(v);
 		}//if
