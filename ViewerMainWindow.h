@@ -52,5 +52,6 @@ class ViewerMainWindow : public QMainWindow
         void colorChanged();
         void shadingChanged(QString);
         void refresh();
+				void reset();
 };
 

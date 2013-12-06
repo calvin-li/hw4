@@ -19,6 +19,7 @@ class GLDisplay : public QGLWidget
         void setLight(double aI, double dR);
         void setColor(double red, double green, double blue);
         void setShading(int option);
+				void reset();
 
         static const int smoothOptionNumber = 0;
         static const int phongOptionNumber = 1;

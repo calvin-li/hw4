@@ -22,7 +22,7 @@ static const uint qt_meta_data_ViewerMainWindow[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       8,   14, // methods
+       9,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -38,6 +38,7 @@ static const uint qt_meta_data_ViewerMainWindow[] = {
       97,   17,   17,   17, 0x0a,
      112,   17,   17,   17, 0x0a,
      136,   17,   17,   17, 0x0a,
+     146,   17,   17,   17, 0x0a,
 
        0        // eod
 };
@@ -47,7 +48,7 @@ static const char qt_meta_stringdata_ViewerMainWindow[] = {
     "viewChanged()\0cameraChanged()\0"
     "rotateChanged()\0lightChanged()\0"
     "colorChanged()\0shadingChanged(QString)\0"
-    "refresh()\0"
+    "refresh()\0reset()\0"
 };
 
 void ViewerMainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -64,6 +65,7 @@ void ViewerMainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         case 5: _t->colorChanged(); break;
         case 6: _t->shadingChanged((*reinterpret_cast< QString(*)>(_a[1]))); break;
         case 7: _t->refresh(); break;
+        case 8: _t->reset(); break;
         default: ;
         }
     }
@@ -101,9 +103,9 @@ int ViewerMainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 8)
+        if (_id < 9)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 8;
+        _id -= 9;
     }
     return _id;
 }

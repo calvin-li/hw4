@@ -253,6 +253,13 @@ ViewerMainWindow::ViewerMainWindow()
     QObject::connect(shadingOptions, SIGNAL(currentIndexChanged(QString)),
                      this, SLOT(shadingChanged(QString)));
 
+		//reset button
+		QPushButton *reset = new QPushButton("Reset");
+		refreshLayout->addWidget(reset);
+		QObject::connect(reset, SIGNAL(clicked()), this, SLOT(reset()));
+
+
+
     //refresh button
     refreshLayout->addStretch();
     QPushButton *refresh = new QPushButton("Refresh");
@@ -327,3 +334,7 @@ void ViewerMainWindow::refresh(){
     lightChanged();
     colorChanged();
 }//refresh
+
+void ViewerMainWindow::reset(){
+		mGLDisplay->reset();
+}

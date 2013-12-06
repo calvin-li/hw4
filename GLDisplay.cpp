@@ -13,7 +13,7 @@
 //pi
 const double pi = 3.141592653589793238462;
 
-static const GLfloat dice_buffer[] = {
+const GLfloat dice_buffer[] = {
     .25f,0.0f, 0.5f,0.0f, 0.5f,0.5f, .25f,0.5f,
     .25f,0.5f, 0.5f,0.5f, 0.5f,1.0f, .25f,1.0f,
     .498,0.0f, .75f,0.0f, .75f,0.5f, .498,0.5f,
@@ -27,20 +27,20 @@ static const GLfloat dice_buffer[] = {
 const QString files[] = {
     "ground",
     "sword",
-    "sword",
+    "suzanne",
     "sword",
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
 Mesh Shapes[numFiles];
 
-const GLfloat translate_buffer[] = {
+GLfloat translate_buffer[] = {
     0.0, -2.0f, 0.0f,
     0.0, 0.0f, 0.0f,
     0.0, 0.0f, 0.0f,
     0.0, 0.0f, 0.0f,
 };//translate_buffer
-const GLfloat scale_buffer[] = {
+GLfloat scale_buffer[] = {
     100.0f,
     1.0f,
     1.0f,
@@ -525,3 +525,15 @@ void GLDisplay::move(glm::vec4 direction){
 
     updateGL();
 }//move
+
+void GLDisplay::reset(){
+		mTranslateX = 0;
+		mTranslateY = 0;
+		mTranslateZ = -2;
+		
+		mR = 0; 
+		mTheta = 0; 
+		mPhi = 0;
+
+		updateGL();
+}
