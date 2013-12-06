@@ -25,7 +25,7 @@ using namespace std;
 //index builder from https://github.com/huamulan/OpenGL-tutorial/blob/master/common/vboindexer.cpp
 
 struct PackedVertex{
-    glm::vec3 position;
+    glm::vec4 position;
     glm::vec2 uv;
     glm::vec3 normal;
     bool operator<(const PackedVertex that) const{
@@ -35,10 +35,10 @@ struct PackedVertex{
 
 bool getSimilarVertexIndex_fast(
     PackedVertex & packed,
-    std::map<PackedVertex,unsigned short> & VertexToOutIndex,
+    map<PackedVertex,unsigned short> & VertexToOutIndex,
     unsigned short & result
 ){
-    std::map<PackedVertex,unsigned short>::iterator it = VertexToOutIndex.find(packed);
+    map<PackedVertex,unsigned short>::iterator it = VertexToOutIndex.find(packed);
     if ( it == VertexToOutIndex.end() ){
         return false;
     }else{
@@ -48,16 +48,16 @@ bool getSimilarVertexIndex_fast(
 }//getSimilarVertexIndex_fast
 
 void indexVBO(
-    std::vector<glm::vec3> & in_vertices,
-    std::vector<glm::vec2> & in_uvs,
-    std::vector<glm::vec3> & in_normals,
+    vector<glm::vec4> & in_vertices,
+    vector<glm::vec2> & in_uvs,
+    vector<glm::vec3> & in_normals,
 
-    std::vector<unsigned short> & out_indices,
-    std::vector<glm::vec3> & out_vertices,
-    std::vector<glm::vec2> & out_uvs,
-    std::vector<glm::vec3> & out_normals
+    vector<GLuint> & out_indices,
+    vector<glm::vec4> & out_vertices,
+    vector<glm::vec2> & out_uvs,
+    vector<glm::vec3> & out_normals
 ){
-    std::map<PackedVertex,unsigned short> VertexToOutIndex;
+    map<PackedVertex,unsigned short> VertexToOutIndex;
 
     // For each input vertex
     for ( unsigned int i=0; i<in_vertices.size(); i++ ){
@@ -74,7 +74,7 @@ void indexVBO(
             out_vertices.push_back( in_vertices[i]);
             out_uvs .push_back( in_uvs[i]);
             out_normals .push_back( in_normals[i]);
-            unsigned short newindex = (unsigned short)out_vertices.size() - 1;
+            GLuint newindex = (unsigned short)out_vertices.size() - 1;
             out_indices .push_back( newindex );
             VertexToOutIndex[ packed ] = newindex;
         }//else
@@ -86,11 +86,15 @@ void load_obj(const char* filename, Mesh* mesh) {
 	if (!in){ 
 		cerr << "Cannot open " << filename << endl; 
 		exit(1); 
-	}
+	}//if
 
-	vector<glm::vec4> temp_v;
-	vector<glm::vec2> temp_t;
-	vector<glm::vec3> temp_n;
+    vector<glm::vec4> raw_v;
+    vector<glm::vec2> raw_t;
+    vector<glm::vec3> raw_n;
+
+    vector<glm::vec4> temp_v;
+    vector<glm::vec2> temp_t;
+    vector<glm::vec3> temp_n;
 
 	vector<GLuint> t_elements;
 	vector<GLuint> n_elements;
@@ -105,8 +109,8 @@ void load_obj(const char* filename, Mesh* mesh) {
 				s >> v.y;
 				s >> v.z;
 				v.w = 1.0;
-				//temp_v.push_back(v);
-				mesh->vertices.push_back(v);
+                //raw_v.push_back(v);
+                raw_v.push_back(v);
 		}//if
 
 		else if(line.substr(0, 3) == "vt "){
@@ -115,7 +119,7 @@ void load_obj(const char* filename, Mesh* mesh) {
 			glm::vec2 v;
 				s >> v.x;
 				s >> v.y;
-				temp_t.push_back(v);
+                raw_t.push_back(v);
 				//mesh->uvs.push_back(v);
 		}//else if
 		
@@ -126,7 +130,7 @@ void load_obj(const char* filename, Mesh* mesh) {
 				s >> v.x;
 				s >> v.y;
 				s >> v.z;
-				temp_n.push_back(v);
+                raw_n.push_back(v);
 				//mesh->normals.push_back(v);
 		}//else if
 
@@ -135,11 +139,11 @@ void load_obj(const char* filename, Mesh* mesh) {
 
 			// vertices + textures + normals
 			if(sscanf(line.c_str(), "%*s %d/%d/%d %d/%d/%d %d/%d/%d",
-															&v[0],&t[0],&n[0], &v[1],&t[1],&n[1], &v[2],&t[2],&n[2]) == 9){
+                &v[0],&t[0],&n[0], &v[1],&t[1],&n[1], &v[2],&t[2],&n[2]) == 9){
 				for(int i = 0; i < 3; i++){
-					v[i] --;	mesh->elements.push_back(v[i]);
-					t[i] --;	t_elements.push_back(t[i]);
-					n[i] --;	n_elements.push_back(n[i]);
+                    temp_v.push_back( raw_v[v[i]-1] );
+                    temp_t.push_back( raw_t[t[i]-1] );
+                    temp_n.push_back( raw_n[n[i]-1] );
 				}//for
 			}//if
 
@@ -180,15 +184,9 @@ void load_obj(const char* filename, Mesh* mesh) {
 		else{} // Everything else we don't care about
 	}//while
 
+    indexVBO(temp_v, temp_t, temp_n, mesh->elements, mesh->vertices, mesh->uvs, mesh->normals);
 
-	for(unsigned int i = 0; i < mesh->elements.size(); i++){
-		GLuint t_index = t_elements[i],
-					 n_index = n_elements[i];
-
-        glm::vec2 t = temp_t[t_index];	mesh->uvs.push_back(t);
-        glm::vec3 n = temp_n[n_index];	mesh->normals.push_back(n);
-	}//for
-}
+}//load_obj
 
 #endif
 

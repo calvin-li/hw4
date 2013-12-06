@@ -161,8 +161,6 @@ void GLDisplay::load(int num){
     shape->n_buffer_size = shape->normals.size() * sizeof(shape->normals[0]);
     shape->e_buffer_size = shape->elements.size() * sizeof(shape->elements[0]);
 
-    cout << shape->uvs.size() << endl;
-
     GLfloat minX = 0.0f, maxX = 0.0f;
     GLfloat minY = 0.0f, maxY = 0.0f;
     GLfloat minZ = 0.0f, maxZ = 0.0f;
@@ -228,7 +226,7 @@ void GLDisplay::load(int num){
     glGenTextures(1, &mTextureID);
     glBindTexture(GL_TEXTURE_2D, mTextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texImage.sizeX, texImage.sizeY,
-                 0, GL_BGR, GL_UNSIGNED_BYTE, texImage.data);
+                 0, GL_RGB, GL_UNSIGNED_BYTE, texImage.data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
