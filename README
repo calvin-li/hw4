@@ -1,0 +1,17 @@
+By: Calvin Li,
+		Stanley Situ
+
+Click on the screen to interactive with the models with your mouse and keyboard. 
+	* To rotate the camera, click on the screen and move the mouse around. The camera should follow the direction the mouse moved.
+	* You can zoom in and out of the screen with WASD and Arrow keys. 
+
+	Keys:
+		-	W or UP 	 = move forward
+		-	S or DOWN  = move back
+		-	A or LEFT  = move left
+		-	D or RIGHT = move right
+
+		-	SHIFT = move up
+		-	SPACE = move down
+
+Reset button - resets the camera back to its initial position. 
