@@ -26,12 +26,12 @@ const GLfloat dice_buffer[] = {
 //obj files we are using
 const QString files[] = {
     "ground",
-    "sword",
-    "sword",
-    "sword",
-    "sword",
-    "sword",
-    "sword",
+    "masterchief",
+    "masterchief",
+    "masterchief",
+    "masterchief",
+    "masterchief",
+    "masterchief",
 };//files
 const int numFiles = sizeof(files)/sizeof(QString);
 
